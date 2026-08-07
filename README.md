@@ -200,14 +200,3 @@ pnpm build
 
 The pure tests cover strict parsing, leap years, impossible dates, range
 completion, restarting, and typed-boundary normalization.
-
-## Before publishing
-
-The behavior and demo are working, but this repository is not yet an npm
-library build. A public release still needs:
-
-1. an open-source license;
-2. framework-independent package output and export metadata;
-3. peer-dependency declarations;
-4. packaged styles or a shadcn registry distribution;
-5. component-level accessibility and browser tests;
