@@ -1,6 +1,7 @@
 import RangeCalendar, {
   type RangeCalendarProps,
 } from "@/components/range-calendar";
+import RangeCalendarPlayground from "@/components/range-calendar-playground";
 
 const demoRange = {
   from: new Date(2026, 7, 12),
@@ -121,6 +122,8 @@ function Home() {
           </div>
           <pre className="overflow-x-auto rounded-2xl bg-slate-950 p-5 text-sm leading-7 text-slate-200"><code>{`<RangeCalendar\n  defaultValue={range}\n  inputFormat="YYYY-MM-DD"\n  classNames={{ field: "your-field" }}\n/>`}</code></pre>
         </section>
+
+        <RangeCalendarPlayground />
 
         <section className="mt-16">
           <div className="max-w-xl">

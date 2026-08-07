@@ -41,6 +41,7 @@ export type RangeCalendarProps = {
   toPlaceholder?: string;
   popoverAlign?: "start" | "center" | "end";
   popoverSide?: "top" | "right" | "bottom" | "left";
+  popoverAvoidCollisions?: boolean;
 };
 
 export type RangeCalendarClassNames = {
@@ -119,6 +120,7 @@ function RangeCalendar(props: RangeCalendarProps) {
     toPlaceholder = inputFormat,
     popoverAlign = "end",
     popoverSide = "bottom",
+    popoverAvoidCollisions = true,
   } = props;
   const isControlled = Object.prototype.hasOwnProperty.call(props, "value");
   const isDesktopViewport = React.useSyncExternalStore(
@@ -140,6 +142,9 @@ function RangeCalendar(props: RangeCalendarProps) {
     from: false,
     to: false,
   });
+  const [activeBoundary, setActiveBoundary] = React.useState<Boundary | null>(
+    null,
+  );
   const [visibleMonth, setVisibleMonth] = React.useState(
     range?.from ?? new Date(),
   );
@@ -160,11 +165,11 @@ function RangeCalendar(props: RangeCalendarProps) {
       "flex w-full max-w-full items-stretch overflow-hidden rounded-lg border border-input bg-background shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 sm:w-fit",
     inputs: "flex min-w-0 flex-1 items-stretch sm:flex-none",
     fromField:
-      "flex min-w-0 flex-1 flex-col justify-center py-2.5 pl-3 pr-2 sm:flex-none sm:pr-2.5",
+      "flex min-w-0 flex-1 flex-col justify-center py-2.5 pl-3 pr-2 transition-colors data-[active=true]:bg-accent/60 sm:flex-none sm:pr-2.5",
     toField:
-      "flex min-w-0 flex-1 flex-col justify-center py-2.5 pl-2 pr-3 sm:flex-none sm:pl-2.5",
+      "flex min-w-0 flex-1 flex-col justify-center py-2.5 pl-2 pr-3 transition-colors data-[active=true]:bg-accent/60 sm:flex-none sm:pl-2.5",
     boundaryLabel:
-      "text-[0.68rem] font-medium uppercase tracking-wide text-muted-foreground",
+      "text-[0.68rem] font-medium uppercase tracking-wide text-muted-foreground transition-colors group-data-[active=true]/boundary:text-foreground",
     input:
       "h-6 w-full min-w-0 bg-transparent text-sm font-medium tabular-nums outline-none placeholder:font-normal placeholder:text-muted-foreground/70 disabled:cursor-not-allowed disabled:opacity-50 sm:w-[12ch]",
     separator: "flex items-center justify-center text-muted-foreground",
@@ -207,12 +212,44 @@ function RangeCalendar(props: RangeCalendarProps) {
     }
   }
 
+  function handleInputKeyDown(
+    boundary: Boundary,
+    event: React.KeyboardEvent<HTMLInputElement>,
+  ) {
+    const input = event.currentTarget;
+    const caretAtStart = input.selectionStart === 0 && input.selectionEnd === 0;
+    const caretAtEnd =
+      input.selectionStart === input.value.length &&
+      input.selectionEnd === input.value.length;
+
+    if (boundary === "from" && event.key === "ArrowRight" && caretAtEnd) {
+      event.preventDefault();
+      const nextInput = document.getElementById(toId) as HTMLInputElement | null;
+      nextInput?.focus();
+      nextInput?.setSelectionRange(0, 0);
+    }
+
+    if (boundary === "to" && event.key === "ArrowLeft" && caretAtStart) {
+      event.preventDefault();
+      const previousInput = document.getElementById(fromId) as HTMLInputElement | null;
+      previousInput?.focus();
+      previousInput?.setSelectionRange(
+        previousInput.value.length,
+        previousInput.value.length,
+      );
+    }
+  }
+
   function handleDay(day: Date, modifiers: Record<string, boolean>) {
     if (modifiers.disabled || modifiers.hidden) return;
     const next = selectRangeDay(range, day);
     commit(next);
-    setFromInput(formatDateInput(next.from, inputFormat));
-    setToInput(formatDateInput(next.to, inputFormat));
+    // A controlled consumer is the source of truth. Its inputs update only
+    // after the parent supplies the next value back through props.
+    if (!isControlled) {
+      setFromInput(formatDateInput(next.from, inputFormat));
+      setToInput(formatDateInput(next.to, inputFormat));
+    }
     setTouched({ from: false, to: false });
   }
 
@@ -231,13 +268,18 @@ function RangeCalendar(props: RangeCalendarProps) {
 
   const fromResult = parseDateInput(fromInput, inputFormat);
   const toResult = parseDateInput(toInput, inputFormat);
-  const fromInvalid = touched.from && fromResult.status === "invalid";
+  const fromInvalid =
+    touched.from &&
+    fromResult.status !== "empty" &&
+    fromResult.status !== "valid";
   const toBeforeFrom =
     toResult.status === "valid" &&
     range?.from &&
     compareDays(toResult.date, range.from) < 0;
   const toInvalid =
-    touched.to && (toResult.status === "invalid" || Boolean(toBeforeFrom));
+    touched.to &&
+    ((toResult.status !== "empty" && toResult.status !== "valid") ||
+      Boolean(toBeforeFrom));
 
   const selectedMatcher: Matcher | undefined =
     range?.from && range.to
@@ -271,7 +313,11 @@ function RangeCalendar(props: RangeCalendarProps) {
         className={slotClass("field", fieldClassName)}
       >
         <div data-slot="date-range-inputs" className={slotClass("inputs")}>
-          <div data-slot="date-range-from" className={slotClass("fromField")}>
+          <div
+            data-active={activeBoundary === "from" ? "true" : undefined}
+            data-slot="date-range-from"
+            className={cn(slotClass("fromField"), "group/boundary")}
+          >
             {unstyled ? (
               <label
                 htmlFor={fromId}
@@ -302,6 +348,8 @@ function RangeCalendar(props: RangeCalendarProps) {
               separate
               value={fromInput}
               onChange={(event) => handleInput("from", event.target.value)}
+              onFocus={() => setActiveBoundary("from")}
+              onKeyDown={(event) => handleInputKeyDown("from", event)}
               onBlur={() => setTouched((state) => ({ ...state, from: true }))}
               placeholder={fromPlaceholder}
               className={slotClass("input")}
@@ -314,7 +362,11 @@ function RangeCalendar(props: RangeCalendarProps) {
           >
             {separator ?? <span className="h-7 w-px bg-border" />}
           </div>
-          <div data-slot="date-range-to" className={slotClass("toField")}>
+          <div
+            data-active={activeBoundary === "to" ? "true" : undefined}
+            data-slot="date-range-to"
+            className={cn(slotClass("toField"), "group/boundary")}
+          >
             {unstyled ? (
               <label
                 htmlFor={toId}
@@ -345,6 +397,8 @@ function RangeCalendar(props: RangeCalendarProps) {
               separate
               value={toInput}
               onChange={(event) => handleInput("to", event.target.value)}
+              onFocus={() => setActiveBoundary("to")}
+              onKeyDown={(event) => handleInputKeyDown("to", event)}
               onBlur={() => setTouched((state) => ({ ...state, to: true }))}
               placeholder={toPlaceholder}
               className={slotClass("input")}
@@ -380,6 +434,7 @@ function RangeCalendar(props: RangeCalendarProps) {
           <PopoverContent
             ref={calendarContentRef}
             align={popoverAlign}
+            avoidCollisions={popoverAvoidCollisions}
             side={popoverSide}
             unstyled={unstyled}
             data-slot="date-range-popover"

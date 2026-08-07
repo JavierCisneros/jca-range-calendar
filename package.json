@@ -1,12 +1,49 @@
 {
-  "name": "jca-range-calendar",
+  "name": "jca-range",
   "version": "0.1.0",
-  "private": true,
+  "description": "An accessible, customizable React date range field with typed input and calendar selection.",
+  "license": "MIT",
+  "homepage": "https://www.javiercisneros.me/labs/jca-range",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JavierCisneros/jca-range-calendar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JavierCisneros/jca-range-calendar/issues"
+  },
+  "keywords": [
+    "react",
+    "date-range",
+    "calendar",
+    "datepicker",
+    "accessibility"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "style": "./dist/styles.css",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
   "packageManager": "pnpm@11.18.0",
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:webpack": "next dev --webpack",
     "build": "next build",
+    "build:library": "tsup",
+    "build:styles": "tailwindcss -i ./src/styles.css -o ./dist/styles.css --minify",
+    "build:package": "pnpm build:library && pnpm build:styles",
+    "prepack": "pnpm build:package",
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run"
@@ -21,20 +58,30 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.536.0",
-    "next": "16.2.12",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
     "tailwind-merge": "^3.3.1"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@tailwindcss/cli": "^4.3.3",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.3",
     "@types/node": "^20",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
+    "jsdom": "^30.0.1",
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "tailwindcss": "^4",
+    "tsup": "^8.5.1",
     "tw-animate-css": "^1.3.6",
     "typescript": "^5",
     "vitest": "^4.1.10"

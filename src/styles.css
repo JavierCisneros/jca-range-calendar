@@ -1,0 +1,47 @@
+@import "tailwindcss/utilities";
+
+@source "./components";
+
+@theme {
+  --color-background: var(--jca-background);
+  --color-foreground: var(--jca-foreground);
+  --color-muted-foreground: var(--jca-muted-foreground);
+  --color-input: var(--jca-input);
+  --color-ring: var(--jca-ring);
+  --color-destructive: var(--jca-destructive);
+  --color-popover: var(--jca-popover);
+  --color-popover-foreground: var(--jca-popover-foreground);
+  --color-primary: var(--jca-primary);
+  --color-primary-foreground: var(--jca-primary-foreground);
+  --color-accent: var(--jca-accent);
+  --color-accent-foreground: var(--jca-accent-foreground);
+}
+
+[data-slot="date-range-field"] {
+  --jca-background: #ffffff;
+  --jca-foreground: #0f172a;
+  --jca-muted-foreground: #64748b;
+  --jca-input: #cbd5e1;
+  --jca-ring: #64748b;
+  --jca-destructive: #dc2626;
+  --jca-popover: #ffffff;
+  --jca-popover-foreground: #0f172a;
+  --jca-primary: #0f172a;
+  --jca-primary-foreground: #ffffff;
+  --jca-accent: #e2e8f0;
+  --jca-accent-foreground: #0f172a;
+}
+
+.dark [data-slot="date-range-field"] {
+  --jca-background: #18181b;
+  --jca-foreground: #f4f4f5;
+  --jca-muted-foreground: #a1a1aa;
+  --jca-input: #3f3f46;
+  --jca-ring: #a1a1aa;
+  --jca-popover: #18181b;
+  --jca-popover-foreground: #f4f4f5;
+  --jca-primary: #f4f4f5;
+  --jca-primary-foreground: #18181b;
+  --jca-accent: #3f3f46;
+  --jca-accent-foreground: #f4f4f5;
+}

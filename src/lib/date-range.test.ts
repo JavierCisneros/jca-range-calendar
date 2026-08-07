@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  compareDays,
   formatDateInput,
+  isDateInRange,
   parseDateInput,
   selectRangeDay,
   updateRangeBoundary,
@@ -62,6 +64,13 @@ describe("parseDateInput", () => {
       status: "invalid",
     });
   });
+
+  it("rejects values with the right amount of digits but the wrong separators", () => {
+    expect(parseDateInput("08122026")).toEqual({ status: "invalid" });
+    expect(parseDateInput("2026/08/12", "YYYY-MM-DD")).toEqual({
+      status: "invalid",
+    });
+  });
 });
 
 describe("selectRangeDay", () => {
@@ -115,5 +124,26 @@ describe("updateRangeBoundary", () => {
     expect(
       updateRangeBoundary(current, "to", date(2026, 7, 10)),
     ).toBe(current);
+  });
+
+  it("keeps a partial end when the start is cleared", () => {
+    expect(
+      updateRangeBoundary({ to: date(2026, 7, 15) }, "from", undefined),
+    ).toEqual({ to: date(2026, 7, 15) });
+  });
+});
+
+describe("day comparisons", () => {
+  it("compares calendar days instead of time-of-day values", () => {
+    const morning = new Date(2026, 6, 10, 8, 0);
+    const evening = new Date(2026, 6, 10, 20, 0);
+
+    expect(compareDays(morning, evening)).toBe(0);
+    expect(
+      isDateInRange(new Date(2026, 6, 12, 23, 59), {
+        from: date(2026, 7, 10),
+        to: date(2026, 7, 12),
+      }),
+    ).toBe(true);
   });
 });
