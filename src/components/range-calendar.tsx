@@ -147,6 +147,7 @@ function RangeCalendar(props: RangeCalendarProps) {
   const [activeBoundary, setActiveBoundary] = React.useState<Boundary | null>(
     null,
   );
+  const [hoveredDay, setHoveredDay] = React.useState<Date | null>(null);
   const [visibleMonth, setVisibleMonth] = React.useState(
     range?.from ?? new Date(),
   );
@@ -474,6 +475,7 @@ function RangeCalendar(props: RangeCalendarProps) {
           >
             <Calendar
               {...calendarProps}
+              visualRangeStart={range?.from && !range?.to && hoveredDay && compareDays(hoveredDay, range.from) < 0 ? hoveredDay : range?.from}
               unstyled={unstyled}
               className={cn(calendarProps?.className, classNames.calendar)}
               month={visibleMonth}
@@ -482,17 +484,33 @@ function RangeCalendar(props: RangeCalendarProps) {
               weekStartsOn={weekStartsOn}
               modifiers={{
                 selected: selectedMatcher,
-                range_start: range?.from,
-                range_end: range?.to,
-                range_middle: (day) =>
-                  Boolean(
-                    range?.from &&
-                    range.to &&
-                    isDateInRange(day, range) &&
-                    compareDays(day, range.from) > 0 &&
-                    compareDays(day, range.to) < 0,
-                  ),
+                range_start: range?.from && !range?.to && hoveredDay && compareDays(hoveredDay, range.from) < 0 ? hoveredDay : range?.from,
+                range_end: range?.to ?? (range?.from && !range?.to && hoveredDay && compareDays(hoveredDay, range.from) > 0 ? hoveredDay : undefined),
+                range_middle: (day) => {
+                  if (range?.from && range?.to) {
+                    return Boolean(
+                      isDateInRange(day, range) &&
+                      compareDays(day, range.from) > 0 &&
+                      compareDays(day, range.to) < 0,
+                    );
+                  }
+                  if (range?.from && !range?.to && hoveredDay) {
+                    const isHoveringForward = compareDays(hoveredDay, range.from) > 0;
+                    const start = isHoveringForward ? range.from : hoveredDay;
+                    const end = isHoveringForward ? hoveredDay : range.from;
+                    return Boolean(
+                      compareDays(day, start) > 0 &&
+                      compareDays(day, end) < 0,
+                    );
+                  }
+                  return false;
+                },
               }}
+              onDayMouseEnter={(day, modifiers) => {
+                if (modifiers.disabled) return;
+                setHoveredDay(day);
+              }}
+              onDayMouseLeave={() => setHoveredDay(null)}
               onDayClick={handleDay}
               onDayKeyDown={(day, modifiers, event) => {
                 if (event.key === " " || event.key === "Enter") {
