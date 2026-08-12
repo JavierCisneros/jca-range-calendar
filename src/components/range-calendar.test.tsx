@@ -42,6 +42,22 @@ describe("RangeCalendar", () => {
     expect(screen.getByText("Enter a valid start date.")).toBeInTheDocument();
   });
 
+  it("does not validate again while a previously invalid field is being edited", () => {
+    render(<RangeCalendar>Period</RangeCalendar>);
+    const [fromInput] = getInputs();
+
+    fireEvent.change(fromInput, { target: { value: "02/2" } });
+    fireEvent.blur(fromInput);
+    expect(screen.getByText("Enter a valid start date.")).toBeInTheDocument();
+
+    fireEvent.focus(fromInput);
+    fireEvent.change(fromInput, { target: { value: "02/20" } });
+    expect(screen.queryByText("Enter a valid start date.")).not.toBeInTheDocument();
+
+    fireEvent.blur(fromInput);
+    expect(screen.getByText("Enter a valid start date.")).toBeInTheDocument();
+  });
+
   it("moves between date boundaries with arrow keys at their edges", () => {
     render(<RangeCalendar defaultValue={range}>Period</RangeCalendar>);
     const [fromInput, toInput] = getInputs();

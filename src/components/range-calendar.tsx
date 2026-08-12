@@ -138,7 +138,9 @@ function RangeCalendar(props: RangeCalendarProps) {
   const [toInput, setToInput] = React.useState(() =>
     formatDateInput(range?.to, inputFormat),
   );
-  const [touched, setTouched] = React.useState<Record<Boundary, boolean>>({
+  const [errors, setErrors] = React.useState<
+    Record<Boundary, false | "invalid" | "before-start">
+  >({
     from: false,
     to: false,
   });
@@ -212,6 +214,31 @@ function RangeCalendar(props: RangeCalendarProps) {
     }
   }
 
+  function validateBoundary(boundary: Boundary) {
+    const fromResult = parseDateInput(fromInput, inputFormat);
+    const toResult = parseDateInput(toInput, inputFormat);
+
+    const error =
+      boundary === "from"
+        ? fromResult.status !== "empty" && fromResult.status !== "valid"
+          ? "invalid"
+          : false
+        : toResult.status !== "empty" && toResult.status !== "valid"
+          ? "invalid"
+          : fromResult.status === "valid" &&
+              toResult.status === "valid" &&
+              compareDays(toResult.date, fromResult.date) < 0
+            ? "before-start"
+            : false;
+
+    setErrors((state) => ({ ...state, [boundary]: error }));
+  }
+
+  function handleInputFocus(boundary: Boundary) {
+    setActiveBoundary(boundary);
+    setErrors((state) => ({ ...state, [boundary]: false }));
+  }
+
   function handleInputKeyDown(
     boundary: Boundary,
     event: React.KeyboardEvent<HTMLInputElement>,
@@ -250,7 +277,7 @@ function RangeCalendar(props: RangeCalendarProps) {
       setFromInput(formatDateInput(next.from, inputFormat));
       setToInput(formatDateInput(next.to, inputFormat));
     }
-    setTouched({ from: false, to: false });
+    setErrors({ from: false, to: false });
   }
 
   function handleCalendarOpenChange(nextOpen: boolean) {
@@ -266,20 +293,8 @@ function RangeCalendar(props: RangeCalendarProps) {
     }
   }
 
-  const fromResult = parseDateInput(fromInput, inputFormat);
-  const toResult = parseDateInput(toInput, inputFormat);
-  const fromInvalid =
-    touched.from &&
-    fromResult.status !== "empty" &&
-    fromResult.status !== "valid";
-  const toBeforeFrom =
-    toResult.status === "valid" &&
-    range?.from &&
-    compareDays(toResult.date, range.from) < 0;
-  const toInvalid =
-    touched.to &&
-    ((toResult.status !== "empty" && toResult.status !== "valid") ||
-      Boolean(toBeforeFrom));
+  const fromInvalid = Boolean(errors.from);
+  const toInvalid = Boolean(errors.to);
 
   const selectedMatcher: Matcher | undefined =
     range?.from && range.to
@@ -348,9 +363,9 @@ function RangeCalendar(props: RangeCalendarProps) {
               separate
               value={fromInput}
               onChange={(event) => handleInput("from", event.target.value)}
-              onFocus={() => setActiveBoundary("from")}
+              onFocus={() => handleInputFocus("from")}
               onKeyDown={(event) => handleInputKeyDown("from", event)}
-              onBlur={() => setTouched((state) => ({ ...state, from: true }))}
+              onBlur={() => validateBoundary("from")}
               placeholder={fromPlaceholder}
               className={slotClass("input")}
             />
@@ -397,9 +412,9 @@ function RangeCalendar(props: RangeCalendarProps) {
               separate
               value={toInput}
               onChange={(event) => handleInput("to", event.target.value)}
-              onFocus={() => setActiveBoundary("to")}
+              onFocus={() => handleInputFocus("to")}
               onKeyDown={(event) => handleInputKeyDown("to", event)}
-              onBlur={() => setTouched((state) => ({ ...state, to: true }))}
+              onBlur={() => validateBoundary("to")}
               placeholder={toPlaceholder}
               className={slotClass("input")}
             />
@@ -498,7 +513,7 @@ function RangeCalendar(props: RangeCalendarProps) {
           <span id={`${fromId}-error`}>Enter a valid start date.</span>
         ) : toInvalid ? (
           <span id={`${toId}-error`}>
-            {toBeforeFrom
+            {errors.to === "before-start"
               ? "The end date must be after the start date."
               : "Enter a valid end date."}
           </span>
