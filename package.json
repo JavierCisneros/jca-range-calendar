@@ -1,6 +1,6 @@
 {
   "name": "jca-range",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "An accessible, customizable React date range field with typed input and calendar selection.",
   "license": "MIT",
   "homepage": "https://range.javiercisneros.me",
