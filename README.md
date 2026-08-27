@@ -1,5 +1,7 @@
 # JCA Date Range Field
 
+**[View the Live Demo](https://range.javiercisneros.me/)**
+
 A typed and visual date-range field for React with deliberate, predictable
 selection behavior.
 
