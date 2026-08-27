@@ -193,18 +193,18 @@ export default function RangeCalendarPlayground() {
                 <Toggle active={unstyled} dark={dark} onClick={() => setUnstyled((value) => !value)}>
                   Unstyled base
                 </Toggle>
-                <Toggle active={weekendsDisabled} dark={dark} onClick={() => setWeekendsDisabled((value) => !value)}>
-                  Disable weekends
-                </Toggle>
-                <Toggle active={lockPopoverSide} dark={dark} onClick={() => setLockPopoverSide((value) => !value)}>
-                  Keep selected side
-                </Toggle>
+              <Toggle active={weekendsDisabled} dark={dark} onClick={() => setWeekendsDisabled((value) => !value)}>
+                Disable weekends
+              </Toggle>
+              <Toggle active={lockPopoverSide} dark={dark} onClick={() => setLockPopoverSide((value) => !value)}>
+                Keep selected side
+              </Toggle>
               </div>
             </div>
           </div>
         </div>
 
-        <div className={`rounded-2xl p-5 mb-auto mt-12 transition-colors duration-300 ease-out sm:p-8 ${dark ? "bg-zinc-900" : "bg-slate-50"}`}>
+        <div className={`rounded-2xl p-5 transition-colors duration-300 ease-out sm:p-8 ${dark ? "bg-zinc-900" : "bg-slate-50"}`}>
           <RangeCalendar
             {...(unstyled ? {} : themes[theme])}
             {...(controlled ? { onChange: setRange, value: range } : {})}
@@ -228,30 +228,8 @@ export default function RangeCalendarPlayground() {
           </RangeCalendar>
         </div>
       </div>
-      <div className={`mt-24 mb-40 rounded-2xl pb-48 p-5 mb transition-colors duration-300 ease-out sm:p-8 ${dark ? "bg-zinc-900" : "bg-slate-50"}`}>
-        <RangeCalendar
-          {...(unstyled ? {} : themes[theme])}
-          {...(controlled ? { onChange: setRange, value: range } : {})}
-          calendarProps={
-            weekendsDisabled ? { disabled: { dayOfWeek: [0, 6] } } : undefined
-          }
-          className="transition-colors w-fit mb-80 mx-auto duration-300 ease-out [&_[data-slot]]:transition-colors [&_[data-slot]]:duration-300 [&_button]:transition-colors [&_button]:duration-300 [&_input]:transition-colors [&_input]:duration-300"
-          defaultValue={initialRange}
-          disabled={disabled}
-          fromPlaceholder="Arrival"
-          inputFormat={format}
-          key={`${controlled}-${format}-${months}-${weekStartsOn}-${unstyled}`}
-          numberOfMonths={months}
-          popoverAvoidCollisions={!lockPopoverSide}
-          popoverSide={popoverSide}
-          toPlaceholder="Departure"
-          unstyled={unstyled}
-          weekStartsOn={weekStartsOn}
-        >
-          Date Range
-        </RangeCalendar>
-      </div>
-      <div className={`mx-4 mb-4 mt-48 overflow-hidden rounded-2xl border sm:mx-7 sm:mb-7 ${dark ? "border-zinc-800 bg-zinc-950" : "border-slate-200 bg-slate-950"}`}>
+
+      <div className={`mx-4 mb-4 overflow-hidden rounded-2xl border sm:mx-7 sm:mb-7 ${dark ? "border-zinc-800 bg-zinc-950" : "border-slate-200 bg-slate-950"}`}>
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
           <p className="text-xs font-semibold text-white">Active API</p>
           <button
@@ -306,10 +284,11 @@ function ChoiceGroup<T extends string | number>({
         return (
           <button
             aria-pressed={selected}
-            className={`min-w-0 rounded-md px-2 py-2 text-xs font-semibold transition ${selected
-              ? "bg-white text-slate-950 shadow-sm dark:bg-zinc-800 dark:text-white"
-              : "text-slate-500 hover:text-slate-950 dark:text-zinc-400 dark:hover:text-white"
-              }`}
+            className={`min-w-0 rounded-md px-2 py-2 text-xs font-semibold transition ${
+              selected
+                ? "bg-white text-slate-950 shadow-sm dark:bg-zinc-800 dark:text-white"
+                : "text-slate-500 hover:text-slate-950 dark:text-zinc-400 dark:hover:text-white"
+            }`}
             key={String(optionValue)}
             onClick={() => onChange(optionValue)}
             type="button"
@@ -336,12 +315,13 @@ function Toggle({
   return (
     <button
       aria-pressed={active}
-      className={`rounded-lg border px-3 py-2 text-left text-xs font-semibold transition ${active
-        ? "border-violet-500 bg-violet-500 text-white"
-        : dark
-          ? "border-zinc-700 text-zinc-300 hover:border-zinc-500"
-          : "border-slate-200 text-slate-600 hover:border-slate-400"
-        }`}
+      className={`rounded-lg border px-3 py-2 text-left text-xs font-semibold transition ${
+        active
+          ? "border-violet-500 bg-violet-500 text-white"
+          : dark
+            ? "border-zinc-700 text-zinc-300 hover:border-zinc-500"
+            : "border-slate-200 text-slate-600 hover:border-slate-400"
+      }`}
       onClick={onClick}
       type="button"
     >
