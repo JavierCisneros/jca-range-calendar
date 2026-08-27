@@ -72,6 +72,29 @@ describe("RangeCalendar", () => {
     expect(fromInput).toHaveFocus();
   });
 
+  it("keeps the visible month when a visible earlier day replaces the start date", async () => {
+    const user = userEvent.setup();
+    render(
+      <RangeCalendar
+        defaultValue={{ from: new Date(2026, 7, 12) }}
+        numberOfMonths={1}
+      >
+        Period
+      </RangeCalendar>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /open date range calendar/i }));
+    expect(screen.getByText("August 2026")).toBeInTheDocument();
+
+    const earlierDay = document.querySelector<HTMLButtonElement>(
+      'button[data-day="2026-07-31"]',
+    );
+    expect(earlierDay).not.toBeNull();
+    await user.click(earlierDay!);
+
+    expect(screen.getByText("August 2026")).toBeInTheDocument();
+  });
+
   it("prevents all field interactions when disabled", async () => {
     const user = userEvent.setup();
     render(<RangeCalendar disabled>Period</RangeCalendar>);

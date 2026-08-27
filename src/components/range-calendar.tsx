@@ -148,6 +148,7 @@ function RangeCalendar(props: RangeCalendarProps) {
     null,
   );
   const [hoveredDay, setHoveredDay] = React.useState<Date | null>(null);
+  const hoverTimeoutRef = React.useRef<number | null>(null);
   const [visibleMonth, setVisibleMonth] = React.useState(
     range?.from ?? new Date(),
   );
@@ -165,19 +166,19 @@ function RangeCalendar(props: RangeCalendarProps) {
     root: "grid w-full gap-2",
     label: undefined,
     field:
-      "flex w-full max-w-full items-stretch overflow-hidden rounded-lg border border-input bg-background shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 sm:w-fit",
+      "flex w-full max-w-full items-stretch overflow-hidden rounded-lg border border-input bg-background shadow-xs transition-[border-color,box-shadow] duration-300 ease-out focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 sm:w-fit",
     inputs: "flex min-w-0 flex-1 items-stretch sm:flex-none",
     fromField:
-      "flex min-w-0 flex-1 flex-col justify-center py-2.5 pl-3 pr-2 transition-colors data-[active=true]:bg-accent/60 sm:flex-none sm:pr-2.5",
+      "flex min-w-0 flex-1 flex-col justify-center py-2.5 pl-3 pr-2 transition-colors duration-300 data-[active=true]:bg-accent/60 sm:flex-none sm:pr-2.5",
     toField:
-      "flex min-w-0 flex-1 flex-col justify-center py-2.5 pl-2 pr-3 transition-colors data-[active=true]:bg-accent/60 sm:flex-none sm:pl-2.5",
+      "flex min-w-0 flex-1 flex-col justify-center py-2.5 pl-2 pr-3 transition-colors duration-300 data-[active=true]:bg-accent/60 sm:flex-none sm:pl-2.5",
     boundaryLabel:
-      "text-[0.68rem] font-medium uppercase tracking-wide text-muted-foreground transition-colors group-data-[active=true]/boundary:text-foreground",
+      "text-[0.68rem] font-medium uppercase tracking-wide text-muted-foreground transition-colors duration-300 group-data-[active=true]/boundary:text-foreground",
     input:
       "h-6 w-full min-w-0 bg-transparent text-sm font-medium tabular-nums outline-none placeholder:font-normal placeholder:text-muted-foreground/70 disabled:cursor-not-allowed disabled:opacity-50 sm:w-[12ch]",
     separator: "flex items-center justify-center text-muted-foreground",
     trigger:
-      "h-auto w-11 shrink-0 rounded-none border-l text-muted-foreground hover:text-foreground sm:w-12",
+      "group h-auto w-11 shrink-0 rounded-none border-l text-muted-foreground transition-colors duration-300 hover:text-foreground sm:w-12",
     popover:
       "max-h-[calc(100dvh-1rem)] max-w-[calc(100vw-1rem)] w-auto overflow-auto p-0",
     calendar: undefined,
@@ -193,8 +194,15 @@ function RangeCalendar(props: RangeCalendarProps) {
     const nextTo = toTime === undefined ? undefined : new Date(toTime);
     setFromInput(formatDateInput(nextFrom, inputFormat));
     setToInput(formatDateInput(nextTo, inputFormat));
-    if (nextFrom) setVisibleMonth(nextFrom);
   }, [fromTime, inputFormat, toTime]);
+
+  React.useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current !== null) {
+        window.clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   function commit(next: DateRangeValue | undefined) {
     if (!isControlled) setInternalValue(next);
@@ -227,8 +235,8 @@ function RangeCalendar(props: RangeCalendarProps) {
         : toResult.status !== "empty" && toResult.status !== "valid"
           ? "invalid"
           : fromResult.status === "valid" &&
-              toResult.status === "valid" &&
-              compareDays(toResult.date, fromResult.date) < 0
+            toResult.status === "valid" &&
+            compareDays(toResult.date, fromResult.date) < 0
             ? "before-start"
             : false;
 
@@ -431,7 +439,10 @@ function RangeCalendar(props: RangeCalendarProps) {
                 data-slot="date-range-trigger"
                 className={slotClass("trigger")}
               >
-                <CalendarIcon aria-hidden="true" />
+                <CalendarIcon
+                  aria-hidden="true"
+                  className="transition-transform duration-300 ease-out group-hover:scale-110 group-active:scale-95"
+                />
               </button>
             ) : (
               <Button
@@ -443,7 +454,10 @@ function RangeCalendar(props: RangeCalendarProps) {
                 data-slot="date-range-trigger"
                 className={slotClass("trigger")}
               >
-                <CalendarIcon aria-hidden="true" />
+                <CalendarIcon
+                  aria-hidden="true"
+                  className="transition-transform duration-300 ease-out group-hover:scale-110 group-active:scale-95"
+                />
               </Button>
             )}
           </PopoverTrigger>
@@ -475,8 +489,9 @@ function RangeCalendar(props: RangeCalendarProps) {
           >
             <Calendar
               {...calendarProps}
-              visualRangeStart={range?.from && !range?.to && hoveredDay && compareDays(hoveredDay, range.from) < 0 ? hoveredDay : range?.from}
+              visualRangeStart={range?.from}
               unstyled={unstyled}
+              showOutsideDays={resolvedNumberOfMonths === 1}
               className={cn(calendarProps?.className, classNames.calendar)}
               month={visibleMonth}
               onMonthChange={setVisibleMonth}
@@ -484,7 +499,7 @@ function RangeCalendar(props: RangeCalendarProps) {
               weekStartsOn={weekStartsOn}
               modifiers={{
                 selected: selectedMatcher,
-                range_start: range?.from && !range?.to && hoveredDay && compareDays(hoveredDay, range.from) < 0 ? hoveredDay : range?.from,
+                range_start: range?.from,
                 range_end: range?.to ?? (range?.from && !range?.to && hoveredDay && compareDays(hoveredDay, range.from) > 0 ? hoveredDay : undefined),
                 range_middle: (day) => {
                   if (range?.from && range?.to) {
@@ -496,11 +511,10 @@ function RangeCalendar(props: RangeCalendarProps) {
                   }
                   if (range?.from && !range?.to && hoveredDay) {
                     const isHoveringForward = compareDays(hoveredDay, range.from) > 0;
-                    const start = isHoveringForward ? range.from : hoveredDay;
-                    const end = isHoveringForward ? hoveredDay : range.from;
+                    if (!isHoveringForward) return false;
                     return Boolean(
-                      compareDays(day, start) > 0 &&
-                      compareDays(day, end) < 0,
+                      compareDays(day, range.from) > 0 &&
+                      compareDays(day, hoveredDay) < 0,
                     );
                   }
                   return false;
@@ -508,9 +522,17 @@ function RangeCalendar(props: RangeCalendarProps) {
               }}
               onDayMouseEnter={(day, modifiers) => {
                 if (modifiers.disabled) return;
+                if (hoverTimeoutRef.current !== null) {
+                  window.clearTimeout(hoverTimeoutRef.current);
+                  hoverTimeoutRef.current = null;
+                }
                 setHoveredDay(day);
               }}
-              onDayMouseLeave={() => setHoveredDay(null)}
+              onDayMouseLeave={() => {
+                hoverTimeoutRef.current = window.setTimeout(() => {
+                  setHoveredDay(null);
+                }, 100);
+              }}
               onDayClick={handleDay}
               onDayKeyDown={(day, modifiers, event) => {
                 if (event.key === " " || event.key === "Enter") {
@@ -519,6 +541,16 @@ function RangeCalendar(props: RangeCalendarProps) {
                 }
               }}
             />
+            <div className="flex h-6 w-full items-end justify-end px-3 pb-2">
+              {range?.from && !range?.to && (
+                <span
+                  aria-live="polite"
+                  className="animate-hint-in text-xs font-medium text-muted-foreground"
+                >
+                  Select an end date
+                </span>
+              )}
+            </div>
           </PopoverContent>
         </Popover>
       </div>

@@ -193,7 +193,7 @@ function Calendar({
           ),
           day: cn(
             !unstyled &&
-              "relative w-full h-full p-0 text-center [&:first-child[data-selected=true]_button]:rounded-l-md [&:last-child[data-selected=true]_button]:rounded-r-md group/day aspect-square select-none",
+              "relative w-full h-full p-0 text-center [&:first-child_button[data-range-middle=true]]:!rounded-l-md [&:last-child_button[data-range-middle=true]]:!rounded-r-md [&:first-child_button[data-range-end=true]]:!rounded-l-md [&:last-child_button[data-range-start=true]]:!rounded-r-md group/day aspect-square select-none",
             defaultClassNames.day
           ),
           range_start: cn(
@@ -263,7 +263,7 @@ function CalendarDayButton({
   let staggerDelay = 0;
   if (visualRangeStart) {
     const diff = Math.abs(day.date.getTime() - visualRangeStart.getTime()) / (1000 * 60 * 60 * 24);
-    staggerDelay = Math.max(0, diff - 1) * 0.03; // 30ms stagger per day
+    staggerDelay = Math.min(0.24, Math.max(0, diff - 1) * 0.03);
   }
 
   return (
@@ -283,7 +283,7 @@ function CalendarDayButton({
       className={cn(
         !unstyled && buttonVariants({ variant: "ghost", size: "icon" }),
         !unstyled &&
-        "jca-day-button relative z-0 overflow-hidden transition-all duration-[150ms] ease-linear before:absolute before:inset-0 before:-z-10 before:transition-all before:duration-[150ms] before:ease-linear before:opacity-0",
+        "jca-day-button relative z-0 overflow-hidden transition-[color,transform] duration-150 ease-linear before:absolute before:inset-0 before:-z-10 before:opacity-0 before:transition-[background-color,opacity,transform] before:duration-150 before:ease-linear",
         "data-[selected-single=true]:text-primary-foreground data-[selected-single=true]:before:opacity-100 data-[selected-single=true]:before:bg-primary data-[selected-single=true]:rounded-md",
         "data-[range-middle=true]:text-accent-foreground data-[range-middle=true]:before:opacity-100 data-[range-middle=true]:before:bg-accent",
         "data-[range-start=true]:text-primary-foreground data-[range-start=true]:before:opacity-100 data-[range-start=true]:before:bg-primary",
